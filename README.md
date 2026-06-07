@@ -1,6 +1,6 @@
 # 偽 1x03
 
-![PCB](/pictures/nise1x0300.png)
+![PCB](/pictures/nise1x0300.jpg)
 
 # これはなに
 
