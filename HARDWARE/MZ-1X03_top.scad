@@ -35,7 +35,7 @@ cube([SIZEX*2+MARGIN*2,SIZEY*2+MARGIN*2-35,HEIGHT+THICK]);
 
  // Button Hole
     
-    translate([-25+4+MARGIN*2,25-MARGIN*2,0]) {
+    translate([-25+4-0.5+MARGIN*2,25-MARGIN*2,0]) {
         cube([12.5+MARGIN*4,12.5+MARGIN*4,10]);
     }
 
