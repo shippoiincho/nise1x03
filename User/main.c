@@ -10,9 +10,11 @@
 // PD3: JOY X
 // PD4: JOY Y
 
-//#define DEBUG
-
 #include "debug.h"
+
+#define SENSITIVE 13
+#define TIMEFACTOR 850
+
 
 // Initialize
 
@@ -93,6 +95,36 @@ uint16_t getadc(uint8_t ch)
     return val;
 }
 
+// ADC value to Timer conversion
+// ADC   Max value = 1023 (10bit)
+// Timer Max value = 255 * 7.84usec
+
+static inline uint32_t calc_timer(uint16_t adcval) {
+
+    int32_t temp;
+
+    // ADC value expansion ( x 1,25 )
+
+    temp = adcval - 512;
+
+    temp = (temp*SENSITIVE)/10;
+
+    // Cap
+
+    if(temp<-512) temp=-512;
+    if(temp>511) temp=511;
+
+    temp += 512;
+
+    // Joystick 1 count = 7.84 usec
+
+    temp = (temp * TIMEFACTOR ) / 400;
+
+    return (uint32_t)temp;
+
+}
+
+
 int main(void)
 {
     uint16_t adc_x,adc_y,sws;
@@ -102,51 +134,21 @@ int main(void)
     SystemCoreClockUpdate();
     Delay_Init();
 
-    // DEBUG
-
-//#ifdef DEBUG
-//
-//    SDI_Printf_Enable();
-//
-//    printf("SystemClk:%d\r\n",SystemCoreClock);
-//    printf( "ChipID:%08x\r\n", DBGMCU_GetCHIPID() );
-//
-//#endif
-
  // Initialize GPIOs
 
     initgpio();
     initadc();
-
-//#ifdef DEBUG
-//
-//    while(1) {
-//
-//        adc_x=getadc(ADC_Channel_4);
-//
-//        Delay_Us(1);
-//
-//        adc_y=getadc(ADC_Channel_7);
-//
-//        sws=GPIO_ReadInputData(GPIOC);
-//
-//        printf("%x %x %x\n\r",adc_x,adc_y,sws);
-//
-//        Delay_Ms(1000);
-//
-//    }
-//
-//
-//
-//#endif
 
     // Joystick initial value
 
     adc_x=getadc(ADC_Channel_4);
     adc_y=getadc(ADC_Channel_7);
 
-    time_x= adc_x * 78 / 40 ;
-    time_y= adc_y * 78 / 40 ;
+//    time_x= adc_x * 78 / 40 ;
+//    time_y= adc_y * 78 / 40 ;
+
+    time_x= calc_timer(adc_x);
+    time_y= calc_timer(adc_y);
 
     while(1)
     {
@@ -204,15 +206,13 @@ int main(void)
             GPIO_WriteBit(GPIOC, GPIO_Pin_5, Bit_RESET);
         }
 
-        // ADC MAX value = 4095
-        // MAX Count value= 2000
-        // factor = 4095/2000 = 2
+
 
         adc_x=getadc(ADC_Channel_4);
         adc_y=getadc(ADC_Channel_7);
 
-        time_x= adc_x * 78 / 40 ;
-        time_y= adc_y * 78 / 40 ;
+        time_x= calc_timer(adc_x);
+        time_y= calc_timer(adc_y);
 
     }
 }
